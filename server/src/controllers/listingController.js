@@ -3,7 +3,7 @@ import { Listing } from '../models/Listing.js';
 
 // TODO: write a validation schema for create/update per README.md section 2.
 
-const listingValidationSchema = Joi.object({
+const createListingSchema = Joi.object({
   title: Joi.string().required(),
   description: Joi.string(),
   price: Joi.number().positive().required(),
@@ -97,18 +97,13 @@ export async function deleteListing(req, res, next) {
 // PATCH /api/listings/:id/sold
 export async function markListingSold(req, res, next) {
   try {
-    const listing = await Listing.findOne({
-      _id: req.params.id,
-      status: { $ne: 'removed' },
-    });
-    if (!listing) return res.status(404).json({ message: 'Listing not found' });
-
-    if (listing.status === 'sold') {
-      return res.status(409).json({ message: 'Listing is already sold' });
-    }
-
-    listing.status = 'sold';
-    await listing.save();
-    res.json(listing);
+    const doc = await Listing.findById(req.params.id);
+if (!doc) return res.status(404).json({ message: 'Listing not found' });
+if(doc.status === 'sold') {
+return res.status(400).json({ message: 'Listing is already sold' });
+}
+doc.status = 'sold';
+await doc.save();
+res.json({ ok: true });
   } catch (err) { next(err); }
 }
